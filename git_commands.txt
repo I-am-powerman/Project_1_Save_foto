@@ -1,0 +1,11 @@
+git add . - внести изменения в индекс
+git coomit -m 'message' - коммит
+git push myrepos - 'пуш'
+git checkout -b 'branch name' - сделать отдельную ветку
+git pull - стянуть изменения с мастера
+git remote add myrepos $ssh - добавить удаленный репозиторий для пуша
+git clone ssh - сделать клон с реп
+git cherry-pick myrepos/ - слить изменения с ветки
+git branch -D - удалить ветку
+git log - посмотреть логи которые пушил
+git reset --hard (номер лога который нужен)
