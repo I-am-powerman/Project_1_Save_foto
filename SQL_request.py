@@ -9,7 +9,7 @@ class SQL_request:
     
     # формирует словарь из параметров для защиты ввода
     def dict_values(self) -> dict:
-        protect_values = protect(self._values)
+        protect_values = protect(self._name_columns, self._values)
 
         return protect_values.dict_values
 
@@ -17,7 +17,7 @@ class SQL_request:
     def req_insert(self) -> str:
         protect_values = protect(self._name_columns, self._values)
 
-        sql_req = f"INSERT INTO {self._name_table} ({self._str_collum}) VALUES ({",".join(protect_values.keys_list)});"
+        sql_req = f"INSERT INTO {self._name_table} ({self._str_collum}) VALUES ({(protect_values.keys_str)});"
     
         return sql_req
     
