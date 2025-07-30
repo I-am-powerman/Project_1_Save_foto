@@ -1,16 +1,8 @@
-values = [1, 2, 3 ,4, "vjhsuv", "sdbvsid", 10]
+from protect import protect
 
-str_value = ""
-counter = 0
+spisok = [1, 2, 3, 4, "slhbvos"]
 
-while 1:
-    if  len(values) != counter:
-        str_value += "%s"
-        if len(values) - 1 != counter:
-            str_value += ", "
-        
-        counter += 1
-    else:
-        break
+values = protect(spisok)
+list_keys = values.keys_list
 
-print(str_value)
+print(list_keys)

@@ -1,36 +1,33 @@
 import psycopg2
 
 class driver_sql:
-    def __init__(self, name_DB: str, user_name: str):
-        self.conn = self._connect_DB(name_DB, user_name)
+    def __init__(self, name_DB:str, name_host:str, user_name:str,
+                     password: str, port:str):
+        self.conn = self._connect_DB(name_DB, name_host, user_name,
+                     password, port)
 
-    def _connect_DB(self, name_DB, user_name):
+    # подключение к базе данных, метод инициализируется в init
+    # и передает параметр conn который используется в выполнении
+    def _connect_DB(self, name_DB:str, name_host:str, user_name:str,
+                     password: str, port:str):
         conn = psycopg2.connect(dbname=name_DB, 
-                                host="localhost", 
+                                host=name_host, 
                                 user=user_name, 
-                                password="d13031998", 
-                                port="5432")
+                                password=password, 
+                                port=port)
 
         return conn
 
-    def insert_sql(self, name_table: str, name_columns: str, values: list):
-        protect_value = ""
-        counter = 0
+    # функция выполненения SQL запроса
+    # get_data нужен для SQL запроса на получение данных
+    def perform_sql(self, SQL_request: str, dict_values: dict = None, get_data: bool = False):
 
-        while 1:
-            if  len(values) != counter:
-                protect_value += "%s"
-                if len(values) - 1 != counter:
-                    protect_value += ", "
-                counter += 1
-            else:
-                break
+        self.conn.cursor().execute(SQL_request, dict_values)
         
-        insert_sql = f"INSERT INTO {name_table}({name_columns}) VALUES ({protect_value});"
-        values_sql = values
-        self.conn.cursor().execute(insert_sql, values_sql)
+        if get_data:
+            # пока сделал чтобы он все данные доставал
+            return self.conn.cursor().fetchall()
+        
         self.conn.commit()
-    
-    def close_DB(self):
         self.conn.cursor().close()
         self.conn.close()
