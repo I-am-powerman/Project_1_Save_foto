@@ -10,13 +10,15 @@ name_collumns = ["name_1"]
 
 Query = SQL_request("table_1", name_collumns, name_image)
 
-Query_1 = Query.req_insert()
-
-work_table_1.perform_sql(Query_1)
-
+Query_1_sql = Query.req_insert()
+Query_1_values = Query.dict_values()
 Query_2_sql = Query.req_obtain()
-Query_2_values = Query.dict_values
+Query_2_values = Query._str_collum
 
-date = work_table_1.perform_sql(Query_2_sql, Query_2_values, True)
+work_table_1.perform_sql(Query_1_sql, Query_1_values)
+
+date = work_table_1.perform_sql(Query_2_sql, None, True)
 
 print(date)
+
+work_table_1.close_DB()
