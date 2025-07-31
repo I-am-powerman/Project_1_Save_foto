@@ -1,9 +1,10 @@
 from driver_sql import *
 from SQL_request import *
+import password
 
 
 work_table_1 = driver_sql("proba", "localhost", "postgres",
-                             "d13031998", "5432")
+                             password.password_BD, "5432")
 name_image = ["image_1"]
 name_collumns = ["name_1"]
 
