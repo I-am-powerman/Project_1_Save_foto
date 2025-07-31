@@ -21,13 +21,14 @@ class driver_sql:
     # функция выполненения SQL запроса
     # get_data нужен для SQL запроса на получение данных
     def perform_sql(self, SQL_request: str, dict_values: dict = None, get_data: bool = False):
-
-        self.conn.cursor().execute(SQL_request, dict_values)
+        cur = self.conn.cursor()
+        cur.execute(SQL_request, dict_values)
         
         if get_data:
-            # пока сделал чтобы он все данные доставал
-            return self.conn.cursor().fetchall()
+            # пока сделал чтобы он все данные доставал, но нужно сделать целенаправленный поиск
+            return cur.fetchall()
         
+    def close_DB(self):
         self.conn.commit()
         self.conn.cursor().close()
         self.conn.close()

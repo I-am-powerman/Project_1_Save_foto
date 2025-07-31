@@ -1,7 +1,7 @@
 from protect import protect
 
 class SQL_request:
-    def __init__(self, _name_table: str, _name_columns: list, _values: list = []):
+    def __init__(self, _name_table: str, _name_columns: list, _values: list = None):
         self._name_table:str = _name_table
         self._name_columns:list = _name_columns
         self._values:list = _values
