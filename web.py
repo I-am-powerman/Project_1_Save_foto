@@ -1,8 +1,45 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import FileResponse
+from SQL_request import *
+from Driver_sql import *
+from password import *
+from typing import List
 
 app = FastAPI()
 
 
+@app.post("/file")
+def root(files: List[UploadFile] = File(...)):
+    table_images = Driver_sql(
+        "mydatabase", "localhost", "postgres", password.password_BD, "5432"
+    )
+    name_colum = ["name_image"]
+    get_query = SQL_request("images", name_colum).req_obtain()
+    name_dict = table_images.get_data(get_query)
+
+    for file in files:
+        file_content = file.file.read()
+        file_name = file.filename
+        path = f"images/{file_name}"
+        if file_name in name_dict.keys():
+            continue
+        if not file_name:
+            continue
+        with open(path, "wb") as f:
+            f.write(file_content)
+        name_colums = ["name_image", "path"]
+        values = [file_name, path]
+
+        Query = SQL_request("images", name_colums, values)
+
+        insert_query_sql = Query.req_insert()
+        insert_query_values = Query.dict_values()
+
+        table_images.perform_sql(insert_query_sql, insert_query_values)
+
+    table_images.close_DB()
+
+
 @app.get("/")
-async def root():
-    return {"message": "Hello World"}
+def read_root():
+    return FileResponse("index.html")

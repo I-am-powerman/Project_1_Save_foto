@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Загрузка изображений</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f5f7fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+  form {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    text-align: center;
+    width: 300px;
+  }
+  label {
+    font-size: 16px;
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+  input[type="file"] {
+    display: none;
+  }
+  .file-label {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #4a90e2;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .file-label:hover {
+    background: #357abd;
+  }
+  button {
+    margin-top: 15px;
+    padding: 10px 25px;
+    background: #27ae60;
+    border: none;
+    color: white;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  button:hover {
+    background: #1e874b;
+  }
+  #file-count {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #555;
+  }
+  #progress-container {
+    margin-top: 15px;
+    width: 100%;
+    background: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 20px;
+    display: none;
+    position: relative;
+  }
+  #progress-bar {
+    height: 100%;
+    width: 0;
+    background: #4a90e2;
+    transition: width 0.3s;
+  }
+  #progress-text {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    text-align: center;
+    font-size: 12px;
+    color: white;
+    line-height: 20px;
+    font-weight: bold;
+  }
+  #toast {
+    position: fixed;
+    bottom: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #27ae60;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: bottom 0.5s ease;
+    font-size: 14px;
+  }
+  #toast.error {
+    background: #e74c3c;
+  }
+</style>
+</head>
+<body>
+
+<form id="uploadForm" action="/file" method="post" enctype="multipart/form-data">
+  <label for="file" class="file-label">Выберите изображения</label>
+  <input type="file" id="file" name="files" accept="image/*" multiple>
+  <div id="file-count">Файлы не выбраны</div>
+  <button type="submit">Загрузить</button>
+
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+    <div id="progress-text">0%</div>
+  </div>
+</form>
+
+<div id="toast"></div>
+
+<script>
+  const fileInput = document.getElementById('file');
+  const fileCount = document.getElementById('file-count');
+  const uploadForm = document.getElementById('uploadForm');
+  const progressContainer = document.getElementById('progress-container');
+  const progressBar = document.getElementById('progress-bar');
+  const progressText = document.getElementById('progress-text');
+  const toast = document.getElementById('toast');
+
+  // Отображаем количество файлов
+  fileInput.addEventListener('change', () => {
+    const count = fileInput.files.length;
+    fileCount.textContent = count > 0 ? `Выбрано файлов: ${count}` : 'Файлы не выбраны';
+  });
+
+  function showToast(message, isError = false) {
+    toast.textContent = message;
+    toast.className = isError ? 'error' : '';
+    toast.style.bottom = '20px';
+    setTimeout(() => {
+      toast.style.bottom = '-60px';
+    }, 3000);
+  }
+
+  // Обновляем прогресс-бар при отправке
+  uploadForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(uploadForm);
+
+    progressContainer.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressText.textContent = '0%';
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', uploadForm.action, true);
+
+    xhr.upload.onprogress = function(e) {
+      if (e.lengthComputable) {
+        const percentComplete = (e.loaded / e.total) * 100;
+        progressBar.style.width = percentComplete.toFixed(1) + '%';
+        progressText.textContent = Math.round(percentComplete) + '%';
+      }
+    };
+
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        progressBar.style.background = '#27ae60';
+        showToast('✅ Загрузка успешно завершена');
+      } else {
+        progressBar.style.background = '#e74c3c';
+        showToast('❌ Ошибка загрузки', true);
+      }
+    };
+
+    xhr.onerror = function() {
+      progressBar.style.background = '#e74c3c';
+      showToast('❌ Ошибка соединения', true);
+    };
+
+    xhr.send(formData);
+  });
+</script>
+
+</body>
+</html>
