@@ -1,8 +1,9 @@
-from protect import protect
+def process_numbers(numbers: list) -> list:
+    numbers = list(set(numbers))
+    new_list = []
+    for i in numbers:
+        if i >= 10:
+            new_list.append(i)
+    new_list.sort(reverse=True)
 
-spisok = [1, 2, 3, 4, "slhbvos"]
-
-values = protect(spisok)
-list_keys = values.keys_list
-
-print(list_keys)
+    return new_list

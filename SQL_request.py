@@ -1,4 +1,4 @@
-from protect import protect
+from Protect import Protect
 
 class SQL_request:
     def __init__(self, _name_table: str, _name_columns: list, _values: list = None):
@@ -9,13 +9,13 @@ class SQL_request:
     
     # формирует словарь из параметров для защиты ввода
     def dict_values(self) -> dict:
-        protect_values = protect(self._name_columns, self._values)
+        protect_values = Protect(self._name_columns, self._values)
 
         return protect_values.dict_values
 
     #запрос на внесение данных в таблицу
     def req_insert(self) -> str:
-        protect_values = protect(self._name_columns, self._values)
+        protect_values = Protect(self._name_columns, self._values)
 
         sql_req = f"INSERT INTO {self._name_table} ({self._str_collum}) VALUES ({(protect_values.keys_str)});"
     
@@ -31,9 +31,9 @@ class SQL_request:
     #запрос на получение данных как объектов
     def req_obtain(self) -> str:
         
-        sql_req = f"SELECT {self._str_collum} FROM {self._name_table};"
+            sql_req = f"SELECT * FROM {self._name_table} WHERE {self._str_collum} = %s;"
 
-        return sql_req
+            return sql_req
     
     # изменяет список наименований колонок на str
     def _transf_columns(self, _name_columns: list) -> str:
