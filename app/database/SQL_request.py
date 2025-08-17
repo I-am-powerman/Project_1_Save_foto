@@ -1,4 +1,4 @@
-from Protect import Protect
+from database.Protect import Protect
 
 
 class SQL_request:

@@ -1,8 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse
-from SQL_request import *
-from Driver_sql import *
-from password import *
+from database.SQL_request import *
+from database.Connection import connection
 from typing import List
 
 app = FastAPI()
@@ -10,9 +9,7 @@ app = FastAPI()
 
 @app.post("/file")
 def root(files: List[UploadFile] = File(...)):
-    table_images = Driver_sql(
-        "mydatabase", "localhost", "postgres", password.password_BD, "5432"
-    )
+    table_images = connection()
     name_colum = ["name_image"]
     get_query = SQL_request("images", name_colum).req_obtain()
     name_dict = table_images.get_data(get_query)
