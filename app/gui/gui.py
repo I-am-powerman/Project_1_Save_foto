@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from functions.loc_ip import loc_ip
+from functions.get_name_disk import get_name_disk
 import os
 
 root = Tk()
@@ -18,6 +19,7 @@ message = StringVar(value=loc_ip())
 entry_ip = ttk.Entry(textvariable=message)
 entry_ip.pack(pady=20)
 
-# сделать выпадающий список для папок https://metanit.com/python/tkinter/2.14.php
+combobox = ttk.Combobox(values=get_name_disk())
+combobox.pack(pady=20)
 
 root.mainloop()
