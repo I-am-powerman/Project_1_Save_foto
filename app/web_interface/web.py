@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse
 from database.SQL_request import *
 from database.Connection import connection
 from typing import List
+import uvicorn
 
 app = FastAPI()
 
