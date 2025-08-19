@@ -1,39 +1,43 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse
-from app.database.SQL_request import *
-from app.database.Connection import connection
+from database.SQL_request import *
+from database.Connection import connection
 from typing import List
-from .functions.save_file import save_file
-import os
+import uvicorn
 
 app = FastAPI()
 
-
-@app.post("/upload")
-def root(folder: str = Form(...), files: List[UploadFile] = File(...)):
-    db_conn = connection()
+@app.post("/file")
+def root(files: List[UploadFile] = File(...)):
+    table_images = connection()
     name_colum = ["name_image"]
-    get_query = SQL_request("table_image", name_colum).req_obtain()
-    name_dict = db_conn.get_data(get_query)
-    name_colum_path = ["path_flash_disk"]
-    dir_path = SQL_request("path_flash_disk", name_colum_path).limited()
-    get_path = db_conn.get_data(dir_path)
-    dpath = ''
+    get_query = SQL_request("images", name_colum).req_obtain()
+    name_dict = table_images.get_data(get_query)
 
-    for item in get_path:
-        dpath = item
     for file in files:
         file_content = file.file.read()
         file_name = file.filename
-        path_dir = f"{dpath}/{folder}"
-        path = f"{path_dir}/{file_name}"
-        if not os.path.exists(path_dir) or not os.path.isdir(path_dir):
-            os.mkdir(path_dir)
-        save_file(db_conn, file_content, file_name, path, name_dict)
+        path = f"images/{file_name}"
+        if file_name in name_dict.keys():
+            continue
+        if not file_name:
+            continue
+        with open(path, "wb") as f:
+            f.write(file_content)
+        name_colums = ["name_image", "path"]
+        values = [file_name, path]
 
-    db_conn.close_DB()
+        Query = SQL_request("images", name_colums, values)
+
+        insert_query_sql = Query.req_insert()
+        insert_query_values = Query.dict_values()
+
+        table_images.perform_sql(insert_query_sql, insert_query_values)
+
+    table_images.close_DB()
 
 
 @app.get("/")
 def read_root():
-    return FileResponse("../Project_1_Save_foto/app/web_interface/index.html")
+
+    return FileResponse("index.html")
