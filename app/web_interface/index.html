@@ -49,10 +49,19 @@
   .file-label:hover {
     background: #357abd;
   }
-  .folder-label {
+  .folder-btn {
     background: #9b59b6;
+    border: none;
+    padding: 10px 20px;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s;
+    margin: 5px 0;
+    width: 100%;
   }
-  .folder-label:hover {
+  .folder-btn:hover {
     background: #8e44ad;
   }
   button {
@@ -135,6 +144,14 @@
     color: #999;
     font-size: 12px;
   }
+  .scanning {
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
 </style>
 </head>
 <body>
@@ -149,8 +166,7 @@
     
     <div class="divider"><span>ИЛИ</span></div>
     
-    <label for="folder" class="file-label folder-label">Выберите папку с флеш-носителя</label>
-    <input type="file" id="folder" webkitdirectory directory multiple>
+    <button type="button" id="scanFlashBtn" class="folder-btn">Сканировать флеш-носитель</button>
     <div id="folder-info">Папка не выбрана</div>
     
     <button type="submit" id="submit-btn" disabled>Загрузить</button>
@@ -166,8 +182,6 @@
 
 <script>
   const fileInput = document.getElementById('file');
-  const folderInput = document.getElementById('folder');
-  const fileCount = document.getElementById('file-count');
   const folderInfo = document.getElementById('folder-info');
   const uploadForm = document.getElementById('uploadForm');
   const progressContainer = document.getElementById('progress-container');
@@ -175,38 +189,54 @@
   const progressText = document.getElementById('progress-text');
   const toast = document.getElementById('toast');
   const submitBtn = document.getElementById('submit-btn');
-
-  // Проверяем поддержку выбора папки
-  const isFolderSelectionSupported = 'webkitdirectory' in HTMLInputElement.prototype || 
-                                    'directory' in HTMLInputElement.prototype;
-  
-  if (!isFolderSelectionSupported) {
-    folderInfo.textContent = 'Выбор папки не поддерживается вашим браузером';
-    folderInput.disabled = true;
-    document.querySelector('[for="folder"]').style.opacity = '0.5';
-  }
+  const scanFlashBtn = document.getElementById('scanFlashBtn');
 
   // Отображаем количество файлов
   fileInput.addEventListener('change', () => {
     const count = fileInput.files.length;
     fileCount.textContent = count > 0 ? `Выбрано файлов: ${count}` : 'Файлы не выбраны';
-    folderInput.value = '';
     folderInfo.textContent = 'Папка не выбрана';
     submitBtn.disabled = count === 0;
   });
 
-  // Обработка выбора папки
-  folderInput.addEventListener('change', () => {
-    if (folderInput.files.length > 0) {
-      const folderName = folderInput.files[0].webkitRelativePath.split('/')[0];
-      folderInfo.textContent = `Выбрана папка: ${folderName} (файлов: ${folderInput.files.length})`;
-      fileInput.value = '';
-      fileCount.textContent = 'Файлы не выбраны';
-      submitBtn.disabled = false;
-    } else {
-      folderInfo.textContent = 'Папка не выбрана';
-      submitBtn.disabled = true;
-    }
+  // Обработка сканирования флеш-носителя
+  scanFlashBtn.addEventListener('click', () => {
+    scanFlashBtn.disabled = true;
+    scanFlashBtn.classList.add('scanning');
+    folderInfo.textContent = 'Сканирование флеш-носителя...';
+    
+    // Отправляем запрос на сервер для сканирования флеш-носителя
+    fetch('/scan-flash', {
+      method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+      scanFlashBtn.classList.remove('scanning');
+      scanFlashBtn.disabled = false;
+      
+      if (data.success) {
+        if (data.files && data.files.length > 0) {
+          folderInfo.textContent = `Найдено файлов на флешке: ${data.files.length}`;
+          // Сохраняем информацию о файлах для последующей отправки
+          window.flashFiles = data.files;
+          submitBtn.disabled = false;
+          showToast('✅ Флеш-носитель успешно просканирован');
+        } else {
+          folderInfo.textContent = 'На флеш-носителе не найдено изображений';
+          showToast('⚠️ На флеш-носителе не найдено изображений', true);
+        }
+      } else {
+        folderInfo.textContent = 'Ошибка сканирования флеш-носителя';
+        showToast('❌ ' + data.message, true);
+      }
+    })
+    .catch(error => {
+      scanFlashBtn.classList.remove('scanning');
+      scanFlashBtn.disabled = false;
+      folderInfo.textContent = 'Ошибка соединения с сервером';
+      showToast('❌ Ошибка соединения с сервером', true);
+      console.error('Ошибка:', error);
+    });
   });
 
   function showToast(message, isError = false) {
@@ -222,25 +252,39 @@
   uploadForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // Определяем, что загружать: файлы или содержимое папки
-    const filesToUpload = folderInput.files.length > 0 ? folderInput.files : fileInput.files;
+    // Определяем, что загружать: файлы или содержимое флешки
+    let filesToUpload;
+    let isFlashUpload = window.flashFiles && window.flashFiles.length > 0;
     
-    if (filesToUpload.length === 0) {
+    if (isFlashUpload) {
+      filesToUpload = window.flashFiles;
+    } else {
+      filesToUpload = fileInput.files;
+    }
+    
+    if ((!filesToUpload || filesToUpload.length === 0) && !isFlashUpload) {
       showToast('❌ Не выбраны файлы для загрузки', true);
       return;
     }
 
     const formData = new FormData();
     
-    // Добавляем все файлы в FormData
-    for (let i = 0; i < filesToUpload.length; i++) {
-      formData.append('files', filesToUpload[i]);
+    if (isFlashUpload) {
+      // Для загрузки с флешки отправляем специальный флаг
+      formData.append('flashUpload', 'true');
+      formData.append('fileCount', filesToUpload.length);
+    } else {
+      // Добавляем все файлы в FormData
+      for (let i = 0; i < filesToUpload.length; i++) {
+        formData.append('files', filesToUpload[i]);
+      }
     }
 
     progressContainer.style.display = 'block';
     progressBar.style.width = '0%';
     progressText.textContent = '0%';
     submitBtn.disabled = true;
+    scanFlashBtn.disabled = true;
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', uploadForm.action, true);
@@ -261,16 +305,17 @@
         // Сброс формы после успешной загрузки
         setTimeout(() => {
           fileInput.value = '';
-          folderInput.value = '';
-          fileCount.textContent = 'Файлы не выбраны';
           folderInfo.textContent = 'Папка не выбрана';
           progressContainer.style.display = 'none';
           submitBtn.disabled = true;
+          scanFlashBtn.disabled = false;
+          window.flashFiles = null;
         }, 2000);
       } else {
         progressBar.style.background = '#e74c3c';
         showToast('❌ Ошибка загрузки', true);
         submitBtn.disabled = false;
+        scanFlashBtn.disabled = false;
       }
     };
 
@@ -278,6 +323,7 @@
       progressBar.style.background = '#e74c3c';
       showToast('❌ Ошибка соединения', true);
       submitBtn.disabled = false;
+      scanFlashBtn.disabled = false;
     };
 
     xhr.send(formData);

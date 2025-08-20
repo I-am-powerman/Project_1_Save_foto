@@ -26,4 +26,4 @@ def root(files: List[UploadFile] = File(...)):
 
 @app.get("/")
 def read_root():
-    return FileResponse("index.html")
+    return FileResponse("/home/nomad/Документы/Progekt/Project_1_Save_foto/app/web_interface/index.html")

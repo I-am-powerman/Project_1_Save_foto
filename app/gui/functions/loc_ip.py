@@ -14,4 +14,4 @@ def loc_ip():
     finally:
         s.close()
     
-    return f"http://{local_ip}:8000/file"
+    return f"http://{local_ip}:8000/"
