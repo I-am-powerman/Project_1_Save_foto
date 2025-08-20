@@ -12,14 +12,20 @@
     align-items: center;
     justify-content: center;
     height: 100vh;
+    margin: 0;
   }
-  form {
+  .container {
     background: white;
-    padding: 20px 30px;
+    padding: 25px 30px;
     border-radius: 15px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     text-align: center;
-    width: 300px;
+    width: 350px;
+  }
+  h1 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #333;
   }
   label {
     font-size: 16px;
@@ -38,9 +44,16 @@
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.3s;
+    margin: 5px 0;
   }
   .file-label:hover {
     background: #357abd;
+  }
+  .folder-label {
+    background: #9b59b6;
+  }
+  .folder-label:hover {
+    background: #8e44ad;
   }
   button {
     margin-top: 15px;
@@ -56,10 +69,15 @@
   button:hover {
     background: #1e874b;
   }
-  #file-count {
+  button:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+  }
+  #file-count, #folder-info {
     margin-top: 10px;
     font-size: 14px;
     color: #555;
+    min-height: 20px;
   }
   #progress-container {
     margin-top: 15px;
@@ -104,37 +122,91 @@
   #toast.error {
     background: #e74c3c;
   }
+  .divider {
+    margin: 15px 0;
+    border-top: 1px solid #eee;
+    position: relative;
+  }
+  .divider span {
+    position: relative;
+    top: -10px;
+    background: white;
+    padding: 0 10px;
+    color: #999;
+    font-size: 12px;
+  }
 </style>
 </head>
 <body>
 
-<form id="uploadForm" action="/file" method="post" enctype="multipart/form-data">
-  <label for="file" class="file-label">Выберите изображения</label>
-  <input type="file" id="file" name="files" accept="image/*" multiple>
-  <div id="file-count">Файлы не выбраны</div>
-  <button type="submit">Загрузить</button>
+<div class="container">
+  <h1>Загрузка изображений</h1>
+  
+  <form id="uploadForm" action="/file" method="post" enctype="multipart/form-data">
+    <label for="file" class="file-label">Выберите изображения</label>
+    <input type="file" id="file" name="files" accept="image/*" multiple>
+    <div id="file-count">Файлы не выбраны</div>
+    
+    <div class="divider"><span>ИЛИ</span></div>
+    
+    <label for="folder" class="file-label folder-label">Выберите папку с флеш-носителя</label>
+    <input type="file" id="folder" webkitdirectory directory multiple>
+    <div id="folder-info">Папка не выбрана</div>
+    
+    <button type="submit" id="submit-btn" disabled>Загрузить</button>
 
-  <div id="progress-container">
-    <div id="progress-bar"></div>
-    <div id="progress-text">0%</div>
-  </div>
-</form>
+    <div id="progress-container">
+      <div id="progress-bar"></div>
+      <div id="progress-text">0%</div>
+    </div>
+  </form>
+</div>
 
 <div id="toast"></div>
 
 <script>
   const fileInput = document.getElementById('file');
+  const folderInput = document.getElementById('folder');
   const fileCount = document.getElementById('file-count');
+  const folderInfo = document.getElementById('folder-info');
   const uploadForm = document.getElementById('uploadForm');
   const progressContainer = document.getElementById('progress-container');
   const progressBar = document.getElementById('progress-bar');
   const progressText = document.getElementById('progress-text');
   const toast = document.getElementById('toast');
+  const submitBtn = document.getElementById('submit-btn');
+
+  // Проверяем поддержку выбора папки
+  const isFolderSelectionSupported = 'webkitdirectory' in HTMLInputElement.prototype || 
+                                    'directory' in HTMLInputElement.prototype;
+  
+  if (!isFolderSelectionSupported) {
+    folderInfo.textContent = 'Выбор папки не поддерживается вашим браузером';
+    folderInput.disabled = true;
+    document.querySelector('[for="folder"]').style.opacity = '0.5';
+  }
 
   // Отображаем количество файлов
   fileInput.addEventListener('change', () => {
     const count = fileInput.files.length;
     fileCount.textContent = count > 0 ? `Выбрано файлов: ${count}` : 'Файлы не выбраны';
+    folderInput.value = '';
+    folderInfo.textContent = 'Папка не выбрана';
+    submitBtn.disabled = count === 0;
+  });
+
+  // Обработка выбора папки
+  folderInput.addEventListener('change', () => {
+    if (folderInput.files.length > 0) {
+      const folderName = folderInput.files[0].webkitRelativePath.split('/')[0];
+      folderInfo.textContent = `Выбрана папка: ${folderName} (файлов: ${folderInput.files.length})`;
+      fileInput.value = '';
+      fileCount.textContent = 'Файлы не выбраны';
+      submitBtn.disabled = false;
+    } else {
+      folderInfo.textContent = 'Папка не выбрана';
+      submitBtn.disabled = true;
+    }
   });
 
   function showToast(message, isError = false) {
@@ -149,11 +221,26 @@
   // Обновляем прогресс-бар при отправке
   uploadForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    const formData = new FormData(uploadForm);
+    
+    // Определяем, что загружать: файлы или содержимое папки
+    const filesToUpload = folderInput.files.length > 0 ? folderInput.files : fileInput.files;
+    
+    if (filesToUpload.length === 0) {
+      showToast('❌ Не выбраны файлы для загрузки', true);
+      return;
+    }
+
+    const formData = new FormData();
+    
+    // Добавляем все файлы в FormData
+    for (let i = 0; i < filesToUpload.length; i++) {
+      formData.append('files', filesToUpload[i]);
+    }
 
     progressContainer.style.display = 'block';
     progressBar.style.width = '0%';
     progressText.textContent = '0%';
+    submitBtn.disabled = true;
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', uploadForm.action, true);
@@ -170,15 +257,27 @@
       if (xhr.status === 200) {
         progressBar.style.background = '#27ae60';
         showToast('✅ Загрузка успешно завершена');
+        
+        // Сброс формы после успешной загрузки
+        setTimeout(() => {
+          fileInput.value = '';
+          folderInput.value = '';
+          fileCount.textContent = 'Файлы не выбраны';
+          folderInfo.textContent = 'Папка не выбрана';
+          progressContainer.style.display = 'none';
+          submitBtn.disabled = true;
+        }, 2000);
       } else {
         progressBar.style.background = '#e74c3c';
         showToast('❌ Ошибка загрузки', true);
+        submitBtn.disabled = false;
       }
     };
 
     xhr.onerror = function() {
       progressBar.style.background = '#e74c3c';
       showToast('❌ Ошибка соединения', true);
+      submitBtn.disabled = false;
     };
 
     xhr.send(formData);

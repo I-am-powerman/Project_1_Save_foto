@@ -5,6 +5,7 @@ from functions.get_name_disk import get_name_disk
 import os
 
 
+
 root = Tk()
 root.title("Save you foto")
 root.geometry("270x500+200+100")
@@ -12,7 +13,7 @@ root.geometry("270x500+200+100")
 def selected(event):
     selection = combobox.get()
     print(selection)
-    label_disk["text"] = f"вы выбрали: {selection}"
+
 
 # виджеты
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -42,8 +43,6 @@ entry_server.pack(fill=X, pady = 10)
 
 
 root.mainloop()
-
-
 
 
     

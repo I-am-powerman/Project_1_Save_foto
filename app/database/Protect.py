@@ -1,7 +1,7 @@
 class Protect:
     def __init__(self, name_colums:list, values:list):
         self.dict_values: dict = self._dict_values(name_colums, values)
-        self.keys_str: list = self._keys_str(self.dict_values)
+        self.keys_str: str = self._keys_str(self.dict_values)
      #Выдает словарь с параметрами {name_colum: value}
     def _dict_values(self, name_colums:list, values:list) -> dict:
         dict_values = {}
