@@ -9,7 +9,7 @@ import os
 app = FastAPI()
 
 
-@app.post("/file")
+@app.post("/upload")
 def root(folder: str = Form(...), files: List[UploadFile] = File(...)):
     db_conn = connection()
     name_colum = ["name_image"]
@@ -36,4 +36,4 @@ def root(folder: str = Form(...), files: List[UploadFile] = File(...)):
 
 @app.get("/")
 def read_root():
-    return FileResponse("/home/nomad/Документы/Progekt/Project_1_Save_foto/app/web_interface/index.html")
+    return FileResponse("../Project_1_Save_foto/app/web_interface/index.html")
