@@ -1,4 +1,5 @@
-from . import Gui
+from app.gui import Gui
+
 
 
 

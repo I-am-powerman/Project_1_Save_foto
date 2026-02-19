@@ -24,6 +24,26 @@
             max-width: 400px;
             text-align: center;
         }
+        /* Стилизация при перетаскивании */
+        .upload-container.drag-over {
+            border: 2px dashed #007bff;
+            background-color: #f0f8ff;
+        }
+
+        /* Стили для превью файлов */
+        .file-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .preview-item {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
         h2 { margin-bottom: 1.5rem; color: #333; }
         
         /* Стилизация инпута */
@@ -59,6 +79,12 @@
 
             <input id="file-upload" type="file" name="files" accept="image/*,video/*" multiple required>
             
+            <label for="name_dir">назовите папку:</label>
+            <br><br>
+            
+            <input id="name_dir" type="text" name="name_dir">
+            <br><br>
+
             <button type="submit">Отправить на сервер</button>
         </form>
     </div>
