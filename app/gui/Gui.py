@@ -1,13 +1,14 @@
 from tkinter import *
 from tkinter import ttk
-from functions.loc_ip import loc_ip
-from functions.get_name_disk import get_name_disk
+from app.gui.functions.loc_ip import loc_ip
+from app.gui.functions.get_name_disk import get_name_disk
 import os
+import subprocess
 
 
 root = Tk()
 root.title("Save you foto")
-root.geometry("270x500+200+100")
+root.geometry("270x400+200+100")
 
 def selected(event):
     selection = combobox.get()
@@ -33,17 +34,14 @@ combobox = ttk.Combobox(values=get_name_disk(), justify=CENTER)
 combobox.pack(pady = 10)
 combobox.bind("<<ComboboxSelected>>", selected)
 
-label_server = ttk.Label(text="Скопировать в командную строку:")
-label_server.pack()
-text_server = StringVar(value="uvicorn web:app --host 0.0.0.0 "
-                        "--port 8000 --reload --no-server-header")
-entry_server = ttk.Entry(textvariable=text_server)
-entry_server.pack(fill=X, pady = 10)
-
 
 root.mainloop()
 
 
-
-
-    
+def run_server():
+    """Запускает uvicorn сервер после закрытия окна приложения."""
+    print("Запуск сервера...")
+    subprocess.run(
+        ["uvicorn", "app.web_interface.web:app", "--host", "0.0.0.0", "--port", "8000", "--reload"],
+        cwd=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
