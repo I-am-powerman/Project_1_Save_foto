@@ -127,7 +127,7 @@ curl -X POST "http://localhost:8000/upload" \
 Пример:
   GUI: выбран диск "USB_Disk"
   Веб-интерфейс: имя папки "vacation_2024"
-  Итоговый путь: /media/sky/USB_Disk/vacation_2024/
+  Итоговый путь: /media/name_user/USB_Disk/vacation_2024/
 ```
 
 Если диск недоступен → используется `./uploads/`
