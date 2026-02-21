@@ -13,7 +13,14 @@ app = FastAPI(title="Save Foto API")
 
 # Пути
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+
+# Читаем путь из переменной окружения (передаётся из GUI) или используем uploads по умолчанию
+DISK_PATH = os.getenv("DISK_PATH")
+if DISK_PATH:
+    UPLOAD_DIR = DISK_PATH
+else:
+    UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+
 DB_PATH = os.path.join(BASE_DIR, "Data_Base", "base_foto.db")
 
 # Инициализация БД
@@ -26,17 +33,17 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 @app.post("/upload")
 async def upload_files(files: List[UploadFile] = File(...), name_dir: str = Form(...)):
     """Загрузка файлов на сервер."""
-    
+
     # Создаем папку с указанным именем
     upload_path = os.path.join(UPLOAD_DIR, name_dir)
     os.makedirs(upload_path, exist_ok=True)
 
     uploaded_files = []
-    
+
     for file in files:
         if not file.filename:
             continue
-            
+
         file_content = await file.read()
         file_name = file.filename
         file_path = os.path.join(upload_path, file_name)
